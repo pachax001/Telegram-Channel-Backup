@@ -19,6 +19,7 @@ More details on `config.env` section.
 
 ### Prerequisites
 1. [Python 3.11](https://www.python.org/downloads/release/python-3110/) should be intalled in your system and make sure to add it to `PATH`.
+2. [GIT](https://git-scm.com/downloads) should be installed in your system.
 
 #### Running the script.
 
