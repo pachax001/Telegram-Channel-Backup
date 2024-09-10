@@ -2,11 +2,9 @@ from dotenv import load_dotenv
 import os
 import asyncio
 from pyrogram import Client
-from time import sleep
 from pyrogram.errors import FloodWait
-
-
 import sys
+
 
 # Load environment variables from .env file
 load_dotenv("config.env")
@@ -15,6 +13,9 @@ API_HASH = os.getenv("API_HASH")
 SOURCE_CHANNEL = os.getenv("SOURCE_CHANNEL")
 DESTINATION_CHANNEL = os.getenv("DESTINATION_CHANNEL")
 WAIT_TIME = int(os.getenv("WAIT_TIME", 0))  # Set default to 0 if not provided
+BATCH_MODE = os.getenv("BATCH_MODE", "TRUE").upper() == "TRUE"  # BATCH_MODE default to True
+BATCH_SIZE = int(os.getenv("BATCH_SIZE", 100))
+BATCH_INTERVAL = int(os.getenv("BATCH_INTERVAL", 10))
 
 # Check if required env variables are set
 if not API_ID or not API_HASH or not SOURCE_CHANNEL or not DESTINATION_CHANNEL:
@@ -43,7 +44,7 @@ async def main():
             message_start_destination = await app.send_message(chat_id=DESTINATION_CHANNEL, text="Bot started!")
             await app.delete_messages(chat_id=DESTINATION_CHANNEL, message_ids=message_start_destination.id)
             
-            sleep(2)  # Short sleep before starting the process
+            await asyncio.sleep(2)  # Short sleep before starting the process
 
             # Get the last message from the source channel
             iter_message = app.get_chat_history(chat_id=SOURCE_CHANNEL, limit=1)
@@ -73,9 +74,9 @@ async def main():
         await app.stop()
         sys.exit()
 
-
 async def forward(start_message_id, end_message_id):
     """Forwards messages from source channel to destination channel."""
+    count = 0
     for i in range(start_message_id, end_message_id + 1):
         try:
             message = await app.get_messages(chat_id=SOURCE_CHANNEL, message_ids=i)
@@ -86,6 +87,7 @@ async def forward(start_message_id, end_message_id):
             if message.empty:
                 print(f"Message {i} not found! Probably deleted.")
                 continue
+
             caption = get_caption(message)
             await app.copy_message(
                 chat_id=DESTINATION_CHANNEL,
@@ -96,7 +98,17 @@ async def forward(start_message_id, end_message_id):
             # Save last forwarded message ID
             save_last_forwarded_message_id(i)
             print(f"Message {i} forwarded!")
+
+            # Handle wait time
             await asyncio.sleep(WAIT_TIME)
+
+            # Batch mode handling
+            count += 1
+            if BATCH_MODE and count >= BATCH_SIZE:
+                print(f"Batch size reached. Sleeping for {BATCH_INTERVAL} seconds.")
+                save_last_forwarded_message_id(i)
+                await asyncio.sleep(BATCH_INTERVAL)
+                count = 0  # Reset counter after a batch
         except KeyboardInterrupt:
             print("Bot stopped!")
             save_last_forwarded_message_id(i)
