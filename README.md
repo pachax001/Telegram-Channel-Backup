@@ -29,7 +29,7 @@ git clone https://github.com/pachax001/Telegram-Channel-Backup && cd Telegram-Ch
 
 
 - Fill the variables in [config.env](https://github.com/pachax001/Telegram-Channel-Backup/blob/main/config.env)
-<br> [Click here]((https://github.com/pachax001/Telegram-Channel-Backup/blob/main/README.md#configs) for more info on config. </br>
+<br> [Click here](https://github.com/pachax001/Telegram-Channel-Backup/blob/main/README.md#configs) for more info on config. </br>
 
 - After filling the `config.env` open a terminal in the cloned folder and type the following command:
 
