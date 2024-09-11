@@ -1,10 +1,11 @@
 from dotenv import load_dotenv
 import os
 import asyncio
-from pyrogram import Client
+from pyrogram import Client,enums,utils as pyrogram_utils
 from pyrogram.errors import FloodWait
 import sys
-
+#pyrogram_utils.MIN_CHAT_ID = -999999999999
+#pyrogram_utils.MAX_CHANNEL_ID = -100999999999999
 
 # Load environment variables from .env file
 load_dotenv("config.env")
@@ -14,7 +15,7 @@ SOURCE_CHANNEL = os.getenv("SOURCE_CHANNEL")
 DESTINATION_CHANNEL = os.getenv("DESTINATION_CHANNEL")
 WAIT_TIME = int(os.getenv("WAIT_TIME", 0))  # Set default to 0 if not provided
 BATCH_MODE = os.getenv("BATCH_MODE", "TRUE").upper() == "TRUE"  # BATCH_MODE default to True
-BATCH_SIZE = int(os.getenv("BATCH_SIZE", 100))
+BATCH_SIZE = int(os.getenv("BATCH_SIZE", 1000))
 BATCH_INTERVAL = int(os.getenv("BATCH_INTERVAL", 10))
 
 # Check if required env variables are set
@@ -37,17 +38,13 @@ def save_last_forwarded_message_id(last_forwarded_message_id):
 async def main():
     try:
         async with app:
-            # Notify both source and destination channels that the bot has started
-            message_start_source = await app.send_message(chat_id=SOURCE_CHANNEL, text="Bot started!")
-            await app.delete_messages(chat_id=SOURCE_CHANNEL, message_ids=message_start_source.id)
-
-            message_start_destination = await app.send_message(chat_id=DESTINATION_CHANNEL, text="Bot started!")
+            message_start_destination = await app.send_message(chat_id=int(DESTINATION_CHANNEL), text="Bot started!")
             await app.delete_messages(chat_id=DESTINATION_CHANNEL, message_ids=message_start_destination.id)
             
             await asyncio.sleep(2)  # Short sleep before starting the process
 
             # Get the last message from the source channel
-            iter_message = app.get_chat_history(chat_id=SOURCE_CHANNEL, limit=1)
+            iter_message = app.get_chat_history(chat_id=int(SOURCE_CHANNEL), limit=1)
             async for message in iter_message:
                 last_message_id = message.id
                 print(f"Last message id: {last_message_id}")
